@@ -3,28 +3,33 @@ package repositories
 import (
 	"context"
 
-	"github.com/khoand3012/go-ieltsgrader/domain"
-	"github.com/khoand3012/go-ieltsgrader/mongo"
+	"github.com/khoand3012/go-ieltsgrader/db"
+	"github.com/khoand3012/go-ieltsgrader/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type userRepository struct {
-	database   mongo.Database
+type UserRepository struct {
+	database   db.Database
 	collection string
 }
 
-// Create implements domain.UserRepository.
-func (u *userRepository) Create(c context.Context, user *domain.User) error {
+func NewUserRepository(db db.Database, collection string) domain.UserRepository {
+	return &UserRepository{
+		database:   db,
+		collection: collection,
+	}
+}
+
+func (u *UserRepository) Create(c context.Context, user *domain.User) error {
 	collection := u.database.Collection(u.collection)
 	_, err := collection.InsertOne(c, user)
 
 	return err
 }
 
-// Fetch implements domain.UserRepository.
-func (u *userRepository) Fetch(c context.Context) ([]domain.User, error) {
+func (u *UserRepository) Fetch(c context.Context) ([]domain.User, error) {
 	collection := u.database.Collection(u.collection)
 
 	opts := options.Find().SetProjection(bson.D{{Key: "password", Value: 0}})
@@ -42,8 +47,7 @@ func (u *userRepository) Fetch(c context.Context) ([]domain.User, error) {
 	return users, nil
 }
 
-// GetByEmail implements domain.UserRepository.
-func (u *userRepository) GetByEmail(c context.Context, email string) (domain.User, error) {
+func (u *UserRepository) GetByEmail(c context.Context, email string) (domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	var user domain.User
 	err := collection.FindOne(c, bson.M{"email": email}).Decode(&user)
@@ -51,8 +55,7 @@ func (u *userRepository) GetByEmail(c context.Context, email string) (domain.Use
 	return user, err
 }
 
-// GetByID implements domain.UserRepository.
-func (u *userRepository) GetByID(c context.Context, id string) (domain.User, error) {
+func (u *UserRepository) GetByID(c context.Context, id string) (domain.User, error) {
 	collection := u.database.Collection(u.collection)
 	var user domain.User
 
@@ -65,11 +68,4 @@ func (u *userRepository) GetByID(c context.Context, id string) (domain.User, err
 	err = collection.FindOne(c, bson.M{"_id": idHex}).Decode(&user)
 
 	return user, err
-}
-
-func NewUserRepository(db mongo.Database, collection string) domain.UserRepository {
-	return &userRepository{
-		database:   db,
-		collection: collection,
-	}
 }

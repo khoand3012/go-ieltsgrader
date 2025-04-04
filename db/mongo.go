@@ -1,4 +1,4 @@
-package mongo
+package db
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
-	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -79,7 +79,7 @@ type nullawareDecoder struct {
 }
 
 func (d *nullawareDecoder) DecodeValue(dctx bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
-	if vr.Type() != bsontype.Null {
+	if vr.Type() != bson.TypeNull {
 		return d.defDecoder.DecodeValue(dctx, vr, val)
 	}
 
@@ -89,17 +89,25 @@ func (d *nullawareDecoder) DecodeValue(dctx bsoncodec.DecodeContext, vr bsonrw.V
 	if err := vr.ReadNull(); err != nil {
 		return err
 	}
-	// Set the zero value of val's type:
+
 	val.Set(d.zeroValue)
 	return nil
 }
 
 func NewClient(connection string) (Client, error) {
-
 	time.Local = time.UTC
-	c, err := mongo.NewClient(options.Client().ApplyURI(connection))
+	ctx := context.Background()
 
-	return &mongoClient{cl: c}, err
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connection))
+	if err != nil {
+		return nil, err
+	}
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &mongoClient{cl: client}, err
 
 }
 

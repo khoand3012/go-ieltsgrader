@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/khoand3012/go-ieltsgrader/mongo"
+	"github.com/khoand3012/go-ieltsgrader/db"
 )
 
-func NewMongoDataBase(env *Env) mongo.Client {
+func NewDataBase(env *Env) db.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -24,7 +24,7 @@ func NewMongoDataBase(env *Env) mongo.Client {
 		mongodbURI = fmt.Sprintf("mongodb://%s:%s", dbHost, dbPort)
 	}
 
-	client, err := mongo.NewClient(mongodbURI)
+	client, err := db.NewClient(mongodbURI)
 
 	if err != nil {
 		log.Fatal(err)
@@ -38,7 +38,7 @@ func NewMongoDataBase(env *Env) mongo.Client {
 	return client
 }
 
-func CloseMongoDBConnection(client mongo.Client) {
+func CloseDBConnection(client db.Client) {
 	if client == nil {
 		return
 	}

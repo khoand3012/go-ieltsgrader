@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/khoand3012/go-ieltsgrader/bootstrap"
-	"github.com/khoand3012/go-ieltsgrader/mongo"
+	"github.com/khoand3012/go-ieltsgrader/db"
 )
 
 type LoginResponse struct {
@@ -22,7 +22,7 @@ func LoginHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, lr)
 }
 
-func NewLoginRouter(env *bootstrap.Env, timeout time.Duration, db mongo.Database, group *gin.RouterGroup) {
+func NewLoginRouter(env *bootstrap.Env, timeout time.Duration, db db.Database, group *gin.RouterGroup) {
 
 	group.POST("/login", LoginHandler)
 }
